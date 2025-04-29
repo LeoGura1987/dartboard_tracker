@@ -1,3 +1,4 @@
+// calibration_screen.dart
 import 'dart:html' as html;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -11,10 +12,11 @@ class CalibrationScreen extends StatefulWidget {
 }
 
 class _CalibrationScreenState extends State<CalibrationScreen> {
-  List<Offset> points = []; // 校正點列表
-  bool _cameraError = false; // 相機錯誤 flag
-  late html.VideoElement _videoElement; // 相機元素
-  late GameSettings settings; // 🆕 這場比賽的設定
+  List<Offset> points = [];
+  bool _cameraError = false;
+  late html.VideoElement _videoElement;
+  late GameSettings? settings;
+  late bool isPracticeMode;
 
   final List<String> stepTexts = [
     "請點擊設定【圓心】🎯",
@@ -27,37 +29,30 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
   @override
   void initState() {
     super.initState();
-
     _videoElement = html.VideoElement()
       ..style.width = '100%'
       ..style.height = '100%'
       ..autoplay = true
       ..muted = true
       ..setAttribute('playsinline', 'true');
-
-    // ignore: undefined_prefixed_name
-    ui.platformViewRegistry.registerViewFactory(
-      'videoElement',
-      (int viewId) => _videoElement,
-    );
-
+    ui.platformViewRegistry.registerViewFactory('videoElement', (int viewId) => _videoElement);
     html.window.navigator.mediaDevices?.getUserMedia({'video': true}).then(
       (stream) {
         _videoElement.srcObject = stream;
       },
     ).catchError((e) {
-      print("無法啟動相機 - $e");
       setState(() {
         _cameraError = true;
       });
     });
   }
 
-  // 取得傳進來的 GameSettings
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    settings = ModalRoute.of(context)!.settings.arguments as GameSettings;
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    settings = args['settings'] as GameSettings?;
+    isPracticeMode = args['isPracticeMode'] ?? false;
   }
 
   void _onTapDown(TapDownDetails details) {
@@ -69,14 +64,11 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
   }
 
   void _onCalibrationComplete() {
-    Navigator.pushNamed(
-      context,
-      '/game',
-      arguments: {
-        'settings': settings,
-        'calibrationPoints': points,
-      },
-    );
+    Navigator.pushNamed(context, '/game', arguments: {
+      'settings': settings,
+      'calibrationPoints': points,
+      'isPracticeMode': isPracticeMode,
+    });
   }
 
   @override
@@ -100,7 +92,6 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
             else
               HtmlElementView(viewType: 'videoElement'),
 
-            // 畫出已點擊的點
             ...points.map((point) => Positioned(
                   left: point.dx - 5,
                   top: point.dy - 5,
@@ -114,7 +105,6 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                   ),
                 )),
 
-            // 顯示提示文字
             if (!_cameraError && points.length < 5)
               Positioned(
                 top: 30,
@@ -127,7 +117,6 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                 ),
               ),
 
-            // 顯示完成按鈕
             if (!_cameraError && points.length == 5)
               Positioned(
                 bottom: 30,

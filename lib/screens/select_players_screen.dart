@@ -9,9 +9,9 @@ class SelectPlayersScreen extends StatefulWidget {
 }
 
 class _SelectPlayersScreenState extends State<SelectPlayersScreen> {
-  int playerCount = 2;            // 預設 2 人
-  bool separatedBull = false;    // 預設 Fat Bull (統一紅心 50 分)
-  String outRule = 'Open';       // 預設 Open 出局
+  int playerCount = 2;           // 預設 2 人
+  bool separatedBull = false;   // 預設 Fat Bull (統一紅心 50 分)
+  String outRule = 'Open';      // 預設 Open 出局規則
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +22,7 @@ class _SelectPlayersScreenState extends State<SelectPlayersScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 👥 玩家數量設定
             const Text('👥 選擇玩家數量', style: TextStyle(fontSize: 18)),
             const SizedBox(height: 8),
             DropdownButton<int>(
@@ -33,6 +34,8 @@ class _SelectPlayersScreenState extends State<SelectPlayersScreen> {
             ),
 
             const SizedBox(height: 20),
+
+            // 🎯 紅心模式設定
             const Text('🎯 選擇紅心模式', style: TextStyle(fontSize: 18)),
             RadioListTile<bool>(
               title: const Text('Separated Bull (25分 + 50分)'),
@@ -48,6 +51,8 @@ class _SelectPlayersScreenState extends State<SelectPlayersScreen> {
             ),
 
             const SizedBox(height: 20),
+
+            // 🏁 出局規則設定
             const Text('🏁 選擇出局規則', style: TextStyle(fontSize: 18)),
             RadioListTile<String>(
               title: const Text('Open Out (無限制)'),
@@ -69,6 +74,8 @@ class _SelectPlayersScreenState extends State<SelectPlayersScreen> {
             ),
 
             const SizedBox(height: 30),
+
+            // ✅ 開始校正流程
             Center(
               child: ElevatedButton(
                 onPressed: () {
@@ -78,10 +85,14 @@ class _SelectPlayersScreenState extends State<SelectPlayersScreen> {
                     outRule: outRule,
                   );
 
-                  Navigator.pushNamed(context, '/calibration', arguments: {
-                    'settings': settings,
-                    'isPracticeMode': false, // 👈 這是比賽模式
-                  });
+                  Navigator.pushNamed(
+                    context,
+                    '/calibration',
+                    arguments: {
+                      'settings': settings,
+                      'isPracticeMode': false, // 👈 比賽模式
+                    },
+                  );
                 },
                 child: const Text('✅ 開始設定基準點'),
               ),
@@ -92,3 +103,4 @@ class _SelectPlayersScreenState extends State<SelectPlayersScreen> {
     );
   }
 }
+

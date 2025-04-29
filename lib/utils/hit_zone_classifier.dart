@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 // 命中區域分類工具
 class HitZoneClassifier {
   static const double boardRadiusMm = 195.0; // 靶半徑 = 195 mm
-  static const bool isSeparatedBull = true;  // ⬅️ S-Bull是否分開記25分? (true=Separated Bull, false=Fat Bull 50分)
 
   // 每個分數區對應的角度中心（順時針，從12點鐘方向開始）
   static const List<int> scoreOrder = [
@@ -13,14 +12,13 @@ class HitZoneClassifier {
   ];
 
   // 判斷命中區域 (傳入 Offset，回傳 {zone, score})
-  static Map<String, dynamic> classify(Offset point) {
+  static Map<String, dynamic> classify(Offset point, {required bool separatedBull}) {
     double dx = point.dx;
     double dy = point.dy;
 
-    double distance = sqrt(dx * dx + dy * dy); // 與中心距離（px）
-    double angle = atan2(dy, dx); // 弧度
-    angle = angle * (180 / pi);   // 轉成角度
-    if (angle < 0) angle += 360;  // 確保角度在0~360
+    double distance = sqrt(dx * dx + dy * dy); // 與中心距離（mm）
+    double angle = atan2(dy, dx) * (180 / pi); // 角度
+    if (angle < 0) angle += 360;
 
     // --- 1. Outside
     if (distance > boardRadiusMm) {
@@ -34,24 +32,24 @@ class HitZoneClassifier {
 
     // --- 3. Inner Bull
     if (distance <= boardRadiusMm * 0.08) {
-      if (isSeparatedBull) {
-        return {'zone': 'S-Bull', 'score': 25};
-      } else {
-        return {'zone': 'S-Bull', 'score': 50};
-      }
+      return {
+        'zone': 'S-Bull',
+        'score': separatedBull ? 25 : 50,
+      };
     }
 
-    // --- 4. 找對應的分數區（披薩切片）
-    int sliceIndex = ((angle + 9) % 360 ~/ 18); // 每片18度
+    // --- 4. 分數扇區（每片18度）
+    int sliceIndex = ((angle + 9) % 360 ~/ 18);
     int baseScore = scoreOrder[sliceIndex];
 
-    // --- 5. 判定哪一圈
+    // --- 5. 分析外圈/中圈
     if (distance >= boardRadiusMm * 0.80 && distance <= boardRadiusMm * 0.88) {
       return {'zone': 'D$baseScore', 'score': baseScore * 2}; // Double Ring
     }
     if (distance >= boardRadiusMm * 0.50 && distance <= boardRadiusMm * 0.58) {
       return {'zone': 'T$baseScore', 'score': baseScore * 3}; // Triple Ring
     }
+
     return {'zone': 'S$baseScore', 'score': baseScore}; // Single 區
   }
 }
